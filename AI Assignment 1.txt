@@ -1,0 +1,30 @@
+astar(Node,Path,Cost,KB) :- search([[[Node],0]],TempPath,Cost,KB), reverse(TempPath,Path,[]).
+search([[[Node|PrevNodes],Cost]|_],[Node|PrevNodes],Cost,_) :- goal(Node).
+search([[[Node|PrevNodes],NCost]|More],Path,Cost,KB) :- findall(X,arc([[Node|PrevNodes],NCost],X,KB),Children),
+    										add2frontier(Children,More,New),
+    										search(New,Path,Cost,KB).
+
+add2frontier(A,B,New) :- append(A,B,C), insertionSort(C,New).
+
+arc([[[H|T]|PrevNodes],PrevCost],[Node,NewCost],KB) :- 
+    									member([H|B],KB), append(B,T,Temp),
+    									append([Temp],[[H|T]|PrevNodes],Node),
+    									length(B,L), Cost is 1+ L/(L+1), 
+    									NewCost is Cost+PrevCost.
+heuristic(Node,H) :- length(Node,H).
+goal([]).
+
+insert(X, [], [X]):- !.
+insert(X, [X1|L1], [X, X1|L1]):- less-than(X,X1), !.
+insert(X, [X1|L1], [X1|L]):- insert(X, L1, L).
+
+insertionSort([], []):- !.
+insertionSort([X|L], S):- insertionSort(L, S1), insert(X, S1, S).
+
+less-than([[Node1|_],Cost1],[[Node2|_],Cost2]) :-
+    	heuristic(Node1,Hvalue1), heuristic(Node2,Hvalue2),
+		F1 is Cost1+Hvalue1, F2 is Cost2+Hvalue2,
+		F1 =< F2.
+
+reverse([],Z,Z).
+reverse([H|T],Z,Acc) :- reverse(T,Z,[H|Acc]).
